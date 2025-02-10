@@ -41,6 +41,9 @@ Future<File?> _jsonForFile(File file, {required bool tryhard}) async {
     _bracketSwap,
     _removeExtra,
     _noExtension,
+    _liveVideo,
+    _liveVideo1,
+    _liveVideoJPG,
     // use those two only with tryhard
     // look at https://github.com/TheLastGimbus/GooglePhotosTakeoutHelper/issues/175
     // thanks @denouche for reporting this!
@@ -55,7 +58,7 @@ Future<File?> _jsonForFile(File file, {required bool tryhard}) async {
   return null;
 }
 
-// if the originally file was uploaded without an extension, 
+// if the originally file was uploaded without an extension,
 // (for example, "20030616" (jpg but without ext))
 // it's json won't have the extension ("20030616.json"), but the image
 // itself (after google proccessed it) - will ("20030616.jpg" tadam)
@@ -127,4 +130,31 @@ String _bracketSwap(String filename) {
   // 'image(3).(2)(3).jpg' <- "(3)." repeats twice
   final withoutBracket = filename.replaceLast(bracket, '');
   return '$withoutBracket$bracket';
+}
+
+/// Finds corresponding json file with info and gets 'photoTakenTime' from it
+String _liveVideo(String filename) {
+  if (p.extension(filename).toLowerCase() == ".mp4") {
+    final fileName = p.basenameWithoutExtension(filename);
+    return "$fileName.HEIC";
+  }
+  return filename;
+}
+
+/// Finds corresponding json file with info and gets 'photoTakenTime' from it
+String _liveVideo1(String filename) {
+  if (p.extension(filename).toLowerCase() == ".mp4") {
+    final fileName = p.basenameWithoutExtension(filename);
+    return "$fileName.HEIC(1)";
+  }
+  return filename;
+}
+
+/// Finds corresponding json file with info and gets 'photoTakenTime' from it
+String _liveVideoJPG(String filename) {
+  if (p.extension(filename).toLowerCase() == ".mp4") {
+    final fileName = p.basenameWithoutExtension(filename);
+    return "$fileName.JPG";
+  }
+  return filename;
 }

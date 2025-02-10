@@ -107,6 +107,8 @@ void main(List<String> arguments) async {
     print('');
     args['divide-to-dates'] = await interactive.askDivideDates();
     print('');
+    args['modify-json'] = await interactive.askModifyJson();
+    print('');
     args['albums'] = await interactive.askAlbums();
     print('');
 
@@ -182,9 +184,9 @@ void main(List<String> arguments) async {
     error("No --output folder specified :/");
     quit(10);
   }
-  final input = Directory(args['input']);
+  final input_zip = Directory(args['input']);
   final output = Directory(args['output']);
-  if (!await input.exists()) {
+  if (!await input_zip.exists()) {
     error("Input folder does not exist :/");
     quit(11);
   }
@@ -206,6 +208,14 @@ void main(List<String> arguments) async {
     }
   }
   await output.create(recursive: true);
+
+  // Add code to extract the zip file and move all folders to be merged
+  final input = await mergeFolders(input_zip);
+
+  if (args['modify-json'].toString() == "0") {
+    print('Fixing JSON files. Removing suffix (this may take some time)...');
+    await renameIncorrectJsonFiles(input);
+  }
 
   /// ##################################################
 

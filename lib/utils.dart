@@ -5,7 +5,6 @@ import 'package:gpth/interactive.dart' as interactive;
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:proper_filesize/proper_filesize.dart';
-
 import 'media.dart';
 
 // remember to bump this
@@ -132,4 +131,57 @@ extension Z on String {
     if (lastIndex == -1) return this;
     return replaceRange(lastIndex, lastIndex + from.length, to);
   }
+}
+
+Future<void> renameIncorrectJsonFiles(Directory directory) async {
+  int renamedCount = 0;
+  await for (final entity in directory.list(recursive: true)) {
+    if (entity is File && p.extension(entity.path) == '.json') {
+      final originalName = p.basename(entity.path);
+
+      if (originalName.contains(".supp")) {
+        var newName = originalName.split(".supp")[0];
+        var newPath = p.join(entity.parent.path, "$newName.json");
+        var newFile = File(newPath);
+        // Verify if the file renamed already exists
+        if (await newFile.exists()) {
+          print('[Renamed] Skipping: $newFile already exists');
+        } else {
+          try {
+            await entity.rename(newPath);
+            renamedCount++;
+            //print('[Renamed] ${entity.path} -> $newPath');
+          } on FileSystemException catch (e) {
+            print('[Error] Renaming ${entity.path}: ${e.message}');
+          }
+        }
+      }
+    }
+  }
+  print('Successfully renamed JSON files (suffix removed): $renamedCount');
+}
+
+Future<Directory> mergeFolders(Directory inputFolder) async {
+  final outputPath = Directory(p.join(inputFolder.parent.path, "output"));
+  if (!await outputPath.exists()) {
+    await outputPath.create(recursive: true);
+  }
+
+  // Merge the base folder
+  for (final entity in inputFolder.listSync(recursive: true)) {
+    if (entity is File) {
+      var parentfolder = p.basename(entity.parent.path);
+      if (parentfolder.contains("Sans titre")) {
+        parentfolder = "Sans titre";
+      }
+      var parentFolder = p.join(outputPath.path, parentfolder);
+      if (!await Directory(parentFolder).exists()) {
+        await Directory(parentFolder).create(recursive: true);
+      }
+      final newPath = p.join(parentFolder, p.basename(entity.path));
+      await entity.rename(newPath);
+    }
+  }
+
+  return outputPath;
 }
